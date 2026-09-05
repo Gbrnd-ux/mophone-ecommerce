@@ -1,0 +1,10 @@
+{
+  "description": "Offers a seamless online shopping experience with a wide product range, secure checkout, and user-friendly interface for convenient e-commerce.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
