@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { CartItem } from "../types";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 export function CartDrawer({
   cart,
@@ -16,6 +17,7 @@ export function CartDrawer({
   onRemove: (productId: number, size: string, color: string | undefined) => void;
   navigate: (path: string) => void;
 }) {
+  const { formatPrice } = useCurrency();
   const [closing, setClosing] = useState(false);
 
   const handleClose = useCallback(() => {
@@ -26,9 +28,9 @@ export function CartDrawer({
     }, 300);
   }, [onClose]);
 
-  if (!isOpen && !closing) return null;
+  const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
-  const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+  if (!isOpen && !closing) return null;
 
   return (
     <div className="fixed inset-0 z-[80]">
@@ -101,7 +103,7 @@ export function CartDrawer({
                         </button>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-[14px] font-medium text-[#0f0e0d]">${item.product.price * item.quantity}</span>
+                        <span className="text-[14px] font-medium text-[#0f0e0d]">{formatPrice(item.product.price * item.quantity)}</span>
                         <button
                           onClick={() => onRemove(item.product.id, item.size, item.color)}
                           className="text-[#6b6459] hover:text-red-600 transition-colors"
@@ -125,7 +127,7 @@ export function CartDrawer({
           <div className="px-6 py-5 border-t border-[#0f0e0d]/10 space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-[13px] font-medium tracking-widest uppercase text-[#6b6459]">Subtotal</span>
-              <span className="font-display text-xl font-light text-[#0f0e0d]">${subtotal}</span>
+              <span className="font-display text-xl font-light text-[#0f0e0d]">{formatPrice(subtotal)}</span>
             </div>
             <p className="text-[12px] text-[#6b6459]">Shipping & taxes calculated at checkout</p>
             <button

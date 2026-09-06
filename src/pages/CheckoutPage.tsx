@@ -1,22 +1,20 @@
 import { useState } from "react";
 import { CartItem, ToastData } from "../types";
 import { Breadcrumb } from "../components/Breadcrumb";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 export function CheckoutPage({
   cart,
   onClearCart,
   addToast,
   navigate,
-  promoDiscount,
-  appliedPromo,
 }: {
   cart: CartItem[];
   onClearCart: () => void;
   addToast: (msg: string, type: ToastData["type"]) => void;
   navigate: (path: string) => void;
-  promoDiscount: number;
-  appliedPromo: { code: string; label: string } | null;
 }) {
+  const { formatPrice } = useCurrency();
   const [step, setStep] = useState(1);
   const [shipping, setShipping] = useState({
     firstName: "",
@@ -37,10 +35,14 @@ export function CheckoutPage({
   });
   const [orderNumber, setOrderNumber] = useState("");
 
+  const [promoCode, setPromoCode] = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
+
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  const shippingCost = subtotal >= 150 ? 0 : 15;
-  const tax = Math.round(subtotal * 0.08);
-  const total = subtotal - promoDiscount + shippingCost + tax;
+  const discountedSubtotal = subtotal - discountAmount;
+  const shippingCost = discountedSubtotal >= 150 ? 0 : 15;
+  const tax = Math.round(discountedSubtotal * 0.08);
+  const total = discountedSubtotal + shippingCost + tax;
 
   const steps = [
     { num: 1, label: "Shipping" },
@@ -446,9 +448,42 @@ export function CheckoutPage({
                     <p className="text-[14px] text-[#0f0e0d] font-medium truncate">{item.product.name}</p>
                     <p className="text-[12px] text-[#6b6459]">Size: {item.size}{item.color ? ` · Color: ${item.color}` : ""} · Qty: {item.quantity}</p>
                   </div>
-                  <span className="text-[14px] font-medium text-[#0f0e0d]">${item.product.price * item.quantity}</span>
+                  <span className="text-[14px] font-medium text-[#0f0e0d]">{formatPrice(item.product.price * item.quantity)}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Promo Code */}
+          <div className="bg-white border border-[#0f0e0d]/10 p-6 mb-4">
+            <h3 className="text-[11px] font-medium tracking-widest uppercase text-[#c8a97e] mb-4">Promo Code</h3>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                className="flex-1 px-4 py-3 text-[14px] bg-white border border-[#0f0e0d]/20 focus:outline-none focus:border-[#c8a97e] transition-colors uppercase"
+                placeholder="Enter code (e.g. MOPHONE)"
+                disabled={discountAmount > 0}
+              />
+              <button
+                onClick={() => {
+                  if (discountAmount > 0) {
+                    setDiscountAmount(0);
+                    setPromoCode("");
+                    addToast("Promo code removed", "info");
+                  } else if (promoCode === "MOPHONE") {
+                    setDiscountAmount(Math.round(subtotal * 0.1));
+                    addToast("Promo code applied: 10% off", "success");
+                  } else {
+                    setDiscountAmount(0);
+                    addToast("Invalid promo code", "error");
+                  }
+                }}
+                className="bg-[#0f0e0d] text-[#f5f2ee] text-[12px] font-medium tracking-widest uppercase px-6 hover:bg-[#c8a97e] transition-colors duration-300"
+              >
+                {discountAmount > 0 ? "Remove" : "Apply"}
+              </button>
             </div>
           </div>
 
@@ -457,28 +492,28 @@ export function CheckoutPage({
             <div className="space-y-2 pb-4 border-b border-[#0f0e0d]/10">
               <div className="flex justify-between text-[13px]">
                 <span className="text-[#6b6459]">Subtotal</span>
-                <span className="text-[#0f0e0d]">${subtotal}</span>
+                <span className="text-[#0f0e0d]">{formatPrice(subtotal)}</span>
               </div>
-              {promoDiscount > 0 && (
+              {discountAmount > 0 && (
                 <div className="flex justify-between text-[13px]">
-                  <span className="text-[#c8a97e]">Promo ({appliedPromo?.label})</span>
-                  <span className="text-[#c8a97e]">-${promoDiscount}</span>
+                  <span className="text-[#c8a97e]">Discount (10%)</span>
+                  <span className="text-[#c8a97e]">-{formatPrice(discountAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-[13px]">
                 <span className="text-[#6b6459]">Shipping</span>
                 <span className={shippingCost === 0 ? "text-[#c8a97e]" : "text-[#0f0e0d]"}>
-                  {shippingCost === 0 ? "Free" : `$${shippingCost}`}
+                  {shippingCost === 0 ? "Free" : formatPrice(shippingCost)}
                 </span>
               </div>
               <div className="flex justify-between text-[13px]">
                 <span className="text-[#6b6459]">Tax (est.)</span>
-                <span className="text-[#0f0e0d]">${tax}</span>
+                <span className="text-[#0f0e0d]">{formatPrice(tax)}</span>
               </div>
             </div>
             <div className="flex justify-between pt-4">
               <span className="text-[13px] font-medium tracking-widest uppercase text-[#0f0e0d]">Total</span>
-              <span className="font-display text-2xl font-light text-[#0f0e0d]">${total}</span>
+              <span className="font-display text-2xl font-light text-[#0f0e0d]">{formatPrice(total)}</span>
             </div>
           </div>
 
@@ -496,7 +531,7 @@ export function CheckoutPage({
               onClick={handlePlaceOrder}
               className="bg-[#c8a97e] text-white text-[12px] font-medium tracking-widest uppercase px-10 py-4 hover:bg-[#a8834e] transition-colors duration-300"
             >
-              Place Order — ${total}
+              Place Order — {formatPrice(total)}
             </button>
           </div>
         </div>
@@ -539,7 +574,7 @@ export function CheckoutPage({
               </div>
               <div className="flex justify-between pt-2 border-t border-[#0f0e0d]/10">
                 <span className="font-medium text-[#0f0e0d]">Total Charged</span>
-                <span className="font-medium text-[#0f0e0d]">${total}</span>
+                <span className="font-medium text-[#0f0e0d]">{formatPrice(total)}</span>
               </div>
             </div>
           </div>

@@ -5,17 +5,17 @@ import { CATEGORIES } from "../data/categories";
 import { ProductCard } from "../components/ProductCard";
 
 export function HomePage({
+  wishlist,
+  onToggleWishlist,
   onNavigateProduct,
   addToast,
   navigate,
-  isInWishlist,
-  toggleWishlist,
 }: {
+  wishlist: number[];
+  onToggleWishlist: (id: number) => void;
   onNavigateProduct: (id: number) => void;
   addToast: (msg: string, type: ToastData["type"]) => void;
   navigate: (path: string) => void;
-  isInWishlist?: (id: number) => boolean;
-  toggleWishlist?: (id: number) => void;
 }) {
   const [activeFilter, setActiveFilter] = useState("All");
   const [email, setEmail] = useState("");
@@ -157,8 +157,8 @@ export function HomePage({
               key={product.id}
               product={product}
               onNavigate={onNavigateProduct}
-              isInWishlist={isInWishlist}
-              toggleWishlist={toggleWishlist}
+              wishlist={wishlist}
+              onToggleWishlist={onToggleWishlist}
             />
           ))}
         </div>

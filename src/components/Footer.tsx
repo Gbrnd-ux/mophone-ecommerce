@@ -24,19 +24,19 @@ export function Footer() {
             {
               title: "Help",
               links: [
-                { label: "Buying Guide", path: "/" },
-                { label: "Shipping & Returns", path: "/" },
-                { label: "FAQ", path: "/" },
-                { label: "Contact Us", path: "/" },
+                { label: "Buying Guide", path: "/info/buying-guide" },
+                { label: "Shipping & Returns", path: "/info/shipping" },
+                { label: "FAQ", path: "/info/faq" },
+                { label: "Contact Us", path: "/info/contact" },
               ],
             },
             {
               title: "Company",
               links: [
-                { label: "About", path: "/" },
-                { label: "Sustainability", path: "/" },
-                { label: "Careers", path: "/" },
-                { label: "Press", path: "/" },
+                { label: "About", path: "/info/about" },
+                { label: "Sustainability", path: "/info/sustainability" },
+                { label: "Careers", path: "/info/careers" },
+                { label: "Press", path: "/info/press" },
               ],
             },
           ].map((col) => (

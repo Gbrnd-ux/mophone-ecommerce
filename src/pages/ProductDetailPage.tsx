@@ -3,35 +3,37 @@ import { Product, ToastData } from "../types";
 import { PRODUCTS } from "../data/products";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { ProductCard } from "../components/ProductCard";
-import { REVIEWS } from "../data/reviews";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 export function ProductDetailPage({
   productId,
+  wishlist,
+  onToggleWishlist,
   onAddToCart,
   onNavigateProduct,
   addToast,
   navigate,
-  isInWishlist,
-  toggleWishlist,
 }: {
   productId: string;
+  wishlist: number[];
+  onToggleWishlist: (id: number) => void;
   onAddToCart: (product: Product, size?: string, color?: string) => void;
   onNavigateProduct: (id: number) => void;
   addToast: (msg: string, type: ToastData["type"]) => void;
   navigate: (path: string) => void;
-  isInWishlist?: (id: number) => boolean;
-  toggleWishlist?: (id: number) => void;
 }) {
+  const { formatPrice } = useCurrency();
   const product = PRODUCTS.find((p) => p.id === parseInt(productId));
-  const [selectedSize, setSelectedSize] = useState(product?.sizes[0] ?? "");
+  const [selectedSize, setSelectedSize] = useState(product?.sizes ? product.sizes[0] : "");
+  const [activeTab, setActiveTab] = useState<"description" | "specs" | "reviews">("description");
   const [selectedColor, setSelectedColor] = useState<string | undefined>(
     product?.colors ? product.colors[0].name : undefined
   );
   const [imgLoaded, setImgLoaded] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "specs" | "reviews">("overview");
   
   const displayImage = product?.colors?.find((c) => c.name === selectedColor)?.img || product?.img;
   const displayAlt = product?.colors?.find((c) => c.name === selectedColor)?.alt || product?.alt;
+  const isWishlisted = product ? wishlist.includes(product.id) : false;
 
   if (!product) {
     return (
@@ -51,9 +53,6 @@ export function ProductDetailPage({
   const relatedProducts = PRODUCTS.filter(
     (p) => p.category === product.category && p.id !== product.id
   ).slice(0, 4);
-
-  const productReviews = REVIEWS.filter((r) => r.productId === product.id);
-  const wishlisted = isInWishlist ? isInWishlist(product.id) : false;
 
   const handleAdd = () => {
     if (!selectedSize) {
@@ -105,42 +104,34 @@ export function ProductDetailPage({
             <h1 className="font-display text-4xl md:text-5xl font-light text-[#0f0e0d] mb-4 leading-tight">
               {product.name}
             </h1>
-
-            {/* Rating */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center gap-0.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <svg
-                    key={star}
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill={star <= Math.round(product.rating) ? "#c8a97e" : "none"}
-                    stroke="#c8a97e"
-                    strokeWidth="1.5"
-                  >
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                ))}
-              </div>
-              <span className="text-[13px] text-[#6b6459]">{product.rating} ({product.reviewCount} reviews)</span>
-            </div>
-
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-3">
               <span className="font-display text-2xl font-light text-[#0f0e0d]">
-                ${product.price}
+                {formatPrice(product.price)}
               </span>
               {product.originalPrice && (
                 <span className="text-[16px] text-[#6b6459] line-through">
-                  ${product.originalPrice}
+                  {formatPrice(product.originalPrice)}
                 </span>
               )}
               {product.originalPrice && (
                 <span className="text-[12px] font-medium tracking-wide uppercase bg-[#0f0e0d] text-[#f5f2ee] px-2 py-0.5">
-                  Save ${product.originalPrice - product.price}
+                  Save {formatPrice(product.originalPrice - product.price)}
                 </span>
               )}
             </div>
+
+            {product.rating && (
+              <div className="flex items-center gap-2 mb-6">
+                <div className="flex text-[#c8a97e]">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <svg key={star} width="14" height="14" viewBox="0 0 24 24" fill={star <= Math.round(product.rating!) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  ))}
+                </div>
+                <span className="text-[12px] text-[#6b6459]">{product.rating} ({product.reviewsCount} Reviews)</span>
+              </div>
+            )}
 
             <p className="text-[14px] text-[#6b6459] leading-relaxed mb-8">
               {product.description}
@@ -192,29 +183,34 @@ export function ProductDetailPage({
               </div>
             )}
 
-            {/* Add to Cart + Wishlist */}
-            <div className="flex gap-3 mb-4">
+            {/* Actions */}
+            <div className="flex gap-4 mb-4">
               <button
                 onClick={handleAdd}
                 className="flex-1 bg-[#0f0e0d] text-[#f5f2ee] text-[12px] font-medium tracking-widest uppercase py-4.5 hover:bg-[#c8a97e] transition-colors duration-300"
               >
-                Add to Cart — ${product.price}
+                Add to Cart — {formatPrice(product.price)}
               </button>
-              {toggleWishlist && (
-                <button
-                  onClick={() => toggleWishlist(product.id)}
-                  className={`w-14 flex items-center justify-center border transition-all duration-200 ${
-                    wishlisted
-                      ? "bg-[#c8a97e] border-[#c8a97e] text-white"
-                      : "border-[#0f0e0d]/20 text-[#0f0e0d] hover:border-[#c8a97e] hover:text-[#c8a97e]"
-                  }`}
-                  aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              <button
+                onClick={() => onToggleWishlist(product.id)}
+                className={`flex items-center justify-center w-[54px] border transition-colors ${
+                  isWishlisted
+                    ? "border-[#c8a97e] text-[#c8a97e]"
+                    : "border-[#0f0e0d]/20 text-[#0f0e0d] hover:border-[#0f0e0d]"
+                }`}
+                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill={isWishlisted ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="1.5"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill={wishlisted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
-                </button>
-              )}
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </button>
             </div>
 
             {/* Extra info */}
@@ -233,85 +229,103 @@ export function ProductDetailPage({
           </div>
         </div>
 
-        {/* Tabs: Specs & Reviews */}
-        <div className="mt-16 border-t border-[#0f0e0d]/10 pt-10">
-          <div className="flex items-center gap-0 border-b border-[#0f0e0d]/10 mb-8">
-            {(["overview", "specs", "reviews"] as const).map((tab) => (
+        {/* Tabs Section */}
+        <div className="mt-20 max-w-4xl mx-auto">
+          <div className="flex items-center gap-8 border-b border-[#0f0e0d]/10 mb-8">
+            {(["description", "specs", "reviews"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-[12px] font-medium tracking-widest uppercase px-6 py-3 transition-colors border-b-2 -mb-px ${
+                className={`text-[12px] font-medium tracking-widest uppercase py-4 border-b-2 transition-colors ${
                   activeTab === tab
-                    ? "text-[#0f0e0d] border-[#c8a97e]"
-                    : "text-[#6b6459] border-transparent hover:text-[#0f0e0d]"
+                    ? "border-[#0f0e0d] text-[#0f0e0d]"
+                    : "border-transparent text-[#6b6459] hover:text-[#0f0e0d]"
                 }`}
               >
-                {tab === "reviews" ? `Reviews (${productReviews.length})` : tab}
+                {tab}
               </button>
             ))}
           </div>
-
-          {/* Overview Tab */}
-          {activeTab === "overview" && (
-            <div className="max-w-3xl animate-fade-in">
-              <p className="text-[15px] text-[#6b6459] leading-relaxed">{product.description}</p>
-            </div>
-          )}
-
-          {/* Specs Tab */}
-          {activeTab === "specs" && product.specs && (
-            <div className="max-w-2xl animate-fade-in">
-              <div className="divide-y divide-[#0f0e0d]/10">
-                {Object.entries(product.specs).map(([key, value]) => (
-                  <div key={key} className="grid grid-cols-[140px_1fr] md:grid-cols-[200px_1fr] gap-4 py-4">
-                    <span className="text-[12px] font-medium tracking-widest uppercase text-[#6b6459]">{key}</span>
-                    <span className="text-[14px] text-[#0f0e0d]">{value}</span>
-                  </div>
-                ))}
+          
+          <div className="min-h-[200px]">
+            {activeTab === "description" && (
+              <div className="animate-fade-in text-[#6b6459] leading-relaxed">
+                <p className="mb-4">{product.description}</p>
+                <p>Crafted with premium materials and designed to provide an unparalleled experience, this product embodies the core philosophy of Mophone: "Quality that speaks quietly, lasts forever." Every detail has been meticulously engineered for peak performance and aesthetic brilliance.</p>
               </div>
-            </div>
-          )}
-
-          {/* Reviews Tab */}
-          {activeTab === "reviews" && (
-            <div className="max-w-3xl animate-fade-in">
-              {productReviews.length === 0 ? (
-                <p className="text-[14px] text-[#6b6459]">No reviews yet. Be the first to review this product!</p>
-              ) : (
-                <div className="space-y-6">
-                  {productReviews.map((review) => (
-                    <div key={review.id} className="border-b border-[#0f0e0d]/10 pb-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-[#c8a97e] rounded-full flex items-center justify-center text-white text-[12px] font-semibold">
-                            {review.author.charAt(0)}
-                          </div>
-                          <span className="text-[14px] font-medium text-[#0f0e0d]">{review.author}</span>
-                        </div>
-                        <span className="text-[12px] text-[#6b6459]">{review.date}</span>
+            )}
+            
+            {activeTab === "specs" && (
+              <div className="animate-fade-in">
+                {product.specs ? (
+                  <div className="grid gap-4">
+                    {Object.entries(product.specs).map(([key, value]) => (
+                      <div key={key} className="flex flex-col sm:flex-row sm:items-center py-3 border-b border-[#0f0e0d]/5">
+                        <span className="text-[11px] font-medium tracking-widest uppercase text-[#0f0e0d] w-48 mb-1 sm:mb-0">
+                          {key}
+                        </span>
+                        <span className="text-[14px] text-[#6b6459] flex-1">{value}</span>
                       </div>
-                      <div className="flex items-center gap-0.5 mb-2 ml-11">
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[#6b6459]">Detailed specifications are not available for this product.</p>
+                )}
+              </div>
+            )}
+            
+            {activeTab === "reviews" && (
+              <div className="animate-fade-in">
+                <div className="flex items-center gap-6 mb-10 pb-10 border-b border-[#0f0e0d]/5">
+                  <div className="text-center">
+                    <span className="font-display text-5xl font-light text-[#0f0e0d]">{product.rating}</span>
+                    <div className="flex text-[#c8a97e] justify-center mt-2 mb-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg key={star} width="16" height="16" viewBox="0 0 24 24" fill={star <= Math.round(product.rating || 0) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-[11px] text-[#6b6459] tracking-wide uppercase">Based on {product.reviewsCount} reviews</span>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    {[5, 4, 3, 2, 1].map((star) => (
+                      <div key={star} className="flex items-center gap-3">
+                        <span className="text-[11px] font-medium w-12">{star} Stars</span>
+                        <div className="flex-1 h-1.5 bg-[#e8e3dc] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-[#0f0e0d]" 
+                            style={{ width: star === Math.round(product.rating || 0) ? "65%" : star === 5 ? "85%" : star === 4 ? "10%" : "2%" }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Dummy reviews */}
+                <div className="space-y-8">
+                  {[
+                    { author: "Michael T.", date: "Oct 24, 2025", title: "Absolutely incredible", content: "The build quality is exactly what you'd expect from a premium device. Battery life is fantastic and the screen is gorgeous." },
+                    { author: "Sarah W.", date: "Oct 12, 2025", title: "Best upgrade in years", content: "I upgraded from a 3-year-old device and the difference is night and day. The camera performance in low light is mind-blowing." }
+                  ].map((review, i) => (
+                    <div key={i}>
+                      <div className="flex items-center gap-2 mb-2 text-[#c8a97e]">
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <svg
-                            key={star}
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill={star <= review.rating ? "#c8a97e" : "none"}
-                            stroke="#c8a97e"
-                            strokeWidth="1.5"
-                          >
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          <svg key={star} width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                           </svg>
                         ))}
                       </div>
-                      <p className="text-[14px] text-[#6b6459] leading-relaxed ml-11">{review.comment}</p>
+                      <h4 className="font-medium text-[15px] text-[#0f0e0d] mb-1">{review.title}</h4>
+                      <p className="text-[13px] text-[#6b6459] mb-3">{review.content}</p>
+                      <span className="text-[11px] font-medium tracking-wide uppercase text-[#6b6459] opacity-70">{review.author} — {review.date}</span>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Related Products */}
@@ -333,8 +347,8 @@ export function ProductDetailPage({
                   key={p.id}
                   product={p}
                   onNavigate={onNavigateProduct}
-                  isInWishlist={isInWishlist}
-                  toggleWishlist={toggleWishlist}
+                  wishlist={wishlist}
+                  onToggleWishlist={onToggleWishlist}
                 />
               ))}
             </div>
