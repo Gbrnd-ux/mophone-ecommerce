@@ -1,14 +1,42 @@
 import { useState } from "react";
 import { Product } from "../types";
 
+function StarRating({ rating, count }: { rating: number; count: number }) {
+  return (
+    <div className="flex items-center gap-1.5 mt-1">
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <svg
+            key={star}
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill={star <= Math.round(rating) ? "#c8a97e" : "none"}
+            stroke="#c8a97e"
+            strokeWidth="1.5"
+          >
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        ))}
+      </div>
+      <span className="text-[11px] text-[#6b6459]">({count})</span>
+    </div>
+  );
+}
+
 export function ProductCard({
   product,
   onNavigate,
+  isInWishlist,
+  toggleWishlist,
 }: {
   product: Product;
   onNavigate: (id: number) => void;
+  isInWishlist?: (id: number) => boolean;
+  toggleWishlist?: (id: number) => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const wishlisted = isInWishlist ? isInWishlist(product.id) : false;
 
   return (
     <div
@@ -36,6 +64,28 @@ export function ProductCard({
           >
             {product.tag}
           </span>
+        )}
+        {/* Wishlist heart */}
+        {toggleWishlist && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleWishlist(product.id);
+            }}
+            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill={wishlisted ? "#c8a97e" : "none"}
+              stroke={wishlisted ? "#c8a97e" : "#0f0e0d"}
+              strokeWidth="1.5"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
         )}
         <button
           onClick={(e) => {
@@ -66,6 +116,7 @@ export function ProductCard({
             </span>
           )}
         </div>
+        <StarRating rating={product.rating} count={product.reviewCount} />
       </div>
     </div>
   );

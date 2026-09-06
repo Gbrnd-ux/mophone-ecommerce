@@ -6,15 +6,27 @@ export function CartPage({
   onUpdateQuantity,
   onRemove,
   navigate,
+  promoCode,
+  setPromoCode,
+  appliedPromo,
+  onApplyPromo,
+  onRemovePromo,
+  promoDiscount,
 }: {
   cart: CartItem[];
   onUpdateQuantity: (productId: number, size: string, color: string | undefined, qty: number) => void;
   onRemove: (productId: number, size: string, color: string | undefined) => void;
   navigate: (path: string) => void;
+  promoCode: string;
+  setPromoCode: (code: string) => void;
+  appliedPromo: { code: string; label: string } | null;
+  onApplyPromo: (code: string) => void;
+  onRemovePromo: () => void;
+  promoDiscount: number;
 }) {
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   const shipping = subtotal >= 150 ? 0 : 15;
-  const total = subtotal + shipping;
+  const total = subtotal - promoDiscount + shipping;
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-8 page-enter">
@@ -136,6 +148,12 @@ export function CartPage({
                   <span className="text-[#6b6459]">Subtotal</span>
                   <span className="font-medium text-[#0f0e0d]">${subtotal}</span>
                 </div>
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between text-[13px]">
+                    <span className="text-[#c8a97e]">Promo ({appliedPromo?.label})</span>
+                    <span className="font-medium text-[#c8a97e]">-${promoDiscount}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-[13px]">
                   <span className="text-[#6b6459]">Shipping</span>
                   <span className="font-medium text-[#0f0e0d]">
@@ -151,6 +169,42 @@ export function CartPage({
                 <span className="text-[13px] font-medium tracking-widest uppercase text-[#0f0e0d]">Total</span>
                 <span className="font-display text-2xl font-light text-[#0f0e0d]">${total}</span>
               </div>
+
+              {/* Promo Code Input */}
+              <div className="mb-6 pb-4 border-b border-[#0f0e0d]/10">
+                <p className="text-[11px] font-medium tracking-widest uppercase text-[#6b6459] mb-2">Promo Code</p>
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between bg-[#e8e3dc] px-4 py-2.5">
+                    <div>
+                      <span className="text-[13px] font-semibold text-[#0f0e0d]">{appliedPromo.code}</span>
+                      <span className="text-[12px] text-[#c8a97e] ml-2">({appliedPromo.label})</span>
+                    </div>
+                    <button
+                      onClick={onRemovePromo}
+                      className="text-[#6b6459] hover:text-red-600 transition-colors text-[11px] font-medium tracking-widest uppercase"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value)}
+                      placeholder="Enter code"
+                      className="flex-1 px-3 py-2.5 text-[13px] bg-white border border-[#0f0e0d]/20 focus:outline-none focus:border-[#c8a97e] transition-colors uppercase"
+                    />
+                    <button
+                      onClick={() => onApplyPromo(promoCode)}
+                      className="bg-[#0f0e0d] text-[#f5f2ee] text-[11px] font-medium tracking-widest uppercase px-4 py-2.5 hover:bg-[#c8a97e] transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {subtotal < 150 && (
                 <p className="text-[12px] text-[#c8a97e] mb-4">
                   Add ${150 - subtotal} more for free shipping!

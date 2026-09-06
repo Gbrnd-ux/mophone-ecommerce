@@ -7,11 +7,15 @@ export function CheckoutPage({
   onClearCart,
   addToast,
   navigate,
+  promoDiscount,
+  appliedPromo,
 }: {
   cart: CartItem[];
   onClearCart: () => void;
   addToast: (msg: string, type: ToastData["type"]) => void;
   navigate: (path: string) => void;
+  promoDiscount: number;
+  appliedPromo: { code: string; label: string } | null;
 }) {
   const [step, setStep] = useState(1);
   const [shipping, setShipping] = useState({
@@ -36,7 +40,7 @@ export function CheckoutPage({
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   const shippingCost = subtotal >= 150 ? 0 : 15;
   const tax = Math.round(subtotal * 0.08);
-  const total = subtotal + shippingCost + tax;
+  const total = subtotal - promoDiscount + shippingCost + tax;
 
   const steps = [
     { num: 1, label: "Shipping" },
@@ -144,7 +148,7 @@ export function CheckoutPage({
                 value={shipping.firstName}
                 onChange={(e) => setShipping({ ...shipping, firstName: e.target.value })}
                 className="w-full px-4 py-3 text-[14px] bg-white border border-[#0f0e0d]/20 focus:outline-none focus:border-[#c8a97e] transition-colors"
-                placeholder="John"
+                placeholder="Full Name"
               />
             </div>
             <div>
@@ -168,7 +172,7 @@ export function CheckoutPage({
                 value={shipping.email}
                 onChange={(e) => setShipping({ ...shipping, email: e.target.value })}
                 className="w-full px-4 py-3 text-[14px] bg-white border border-[#0f0e0d]/20 focus:outline-none focus:border-[#c8a97e] transition-colors"
-                placeholder="john@example.com"
+                placeholder="[EMAIL_ADDRESS]"
               />
             </div>
             <div className="md:col-span-2">
@@ -317,7 +321,7 @@ export function CheckoutPage({
                   value={cardInfo.name}
                   onChange={(e) => setCardInfo({ ...cardInfo, name: e.target.value })}
                   className="w-full px-4 py-3 text-[14px] bg-white border border-[#0f0e0d]/20 focus:outline-none focus:border-[#c8a97e] transition-colors"
-                  placeholder="John Doe"
+                  placeholder="Your Name"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -455,6 +459,12 @@ export function CheckoutPage({
                 <span className="text-[#6b6459]">Subtotal</span>
                 <span className="text-[#0f0e0d]">${subtotal}</span>
               </div>
+              {promoDiscount > 0 && (
+                <div className="flex justify-between text-[13px]">
+                  <span className="text-[#c8a97e]">Promo ({appliedPromo?.label})</span>
+                  <span className="text-[#c8a97e]">-${promoDiscount}</span>
+                </div>
+              )}
               <div className="flex justify-between text-[13px]">
                 <span className="text-[#6b6459]">Shipping</span>
                 <span className={shippingCost === 0 ? "text-[#c8a97e]" : "text-[#0f0e0d]"}>
