@@ -41,4 +41,3 @@ This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin con
 - Export components as default exports.
 
 - **SECURITY RULE**: Do NOT read, view, or modify any `.env` files. You are strictly prohibited from accessing environment variables directly.
-- 
