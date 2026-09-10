@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -10,5 +10,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+let app: FirebaseApp;
+let auth: Auth;
+
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+} catch (e) {
+  console.error('Firebase initialization failed. Check your environment variables.', e);
+  // @ts-ignore - fallback so the rest of the app doesn't crash
+  auth = {} as Auth;
+}
+
+export { auth };
