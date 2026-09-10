@@ -13,7 +13,7 @@ export const CATEGORIES = [
   },
   {
     label: "Accessories",
-    img: "https://images.unsplash.com/photo-1625242661151-53245b04d4ad?w=800&h=1000&fit=crop&auto=format",
+    img: "/image/Accessories.png",
     alt: "Tech accessories",
   },
 ];

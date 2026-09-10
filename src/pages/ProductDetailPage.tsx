@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product, ToastData } from "../types";
 import { PRODUCTS } from "../data/products";
 import { Breadcrumb } from "../components/Breadcrumb";
@@ -34,6 +34,14 @@ export function ProductDetailPage({
   const displayImage = product?.colors?.find((c) => c.name === selectedColor)?.img || product?.img;
   const displayAlt = product?.colors?.find((c) => c.name === selectedColor)?.alt || product?.alt;
   const isWishlisted = product ? wishlist.includes(product.id) : false;
+
+  useEffect(() => {
+    if (product) {
+      setSelectedSize(product.sizes ? product.sizes[0] : "");
+      setSelectedColor(product.colors ? product.colors[0].name : undefined);
+      setImgLoaded(false);
+    }
+  }, [productId, product]);
 
   if (!product) {
     return (
@@ -138,26 +146,28 @@ export function ProductDetailPage({
             </p>
 
             {/* Size Selection */}
-            <div className="mb-6">
-              <p className="text-[11px] font-medium tracking-widest uppercase text-[#0f0e0d] mb-3">
-                Size {selectedSize && `— ${selectedSize}`}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`min-w-[48px] px-4 py-2.5 text-[13px] font-medium border transition-all duration-200 ${
-                      selectedSize === size
-                        ? "bg-[#0f0e0d] text-[#f5f2ee] border-[#0f0e0d]"
-                        : "bg-transparent text-[#0f0e0d] border-[#0f0e0d]/20 hover:border-[#0f0e0d]"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {product.sizes && !(product.sizes.length === 1 && product.sizes[0] === "One Size") && (
+              <div className="mb-6">
+                <p className="text-[11px] font-medium tracking-widest uppercase text-[#0f0e0d] mb-3">
+                  {product.category === "Smartphones" || product.category === "Tablets" ? "Storage" : "Size"} {selectedSize && `— ${selectedSize}`}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`min-w-[48px] px-4 py-2.5 text-[13px] font-medium border transition-all duration-200 ${
+                        selectedSize === size
+                          ? "bg-[#0f0e0d] text-[#f5f2ee] border-[#0f0e0d]"
+                          : "bg-transparent text-[#0f0e0d] border-[#0f0e0d]/20 hover:border-[#0f0e0d]"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Color Selection */}
             {product.colors && (
@@ -262,7 +272,7 @@ export function ProductDetailPage({
                     {Object.entries(product.specs).map(([key, value]) => (
                       <div key={key} className="flex flex-col sm:flex-row sm:items-center py-3 border-b border-[#0f0e0d]/5">
                         <span className="text-[11px] font-medium tracking-widest uppercase text-[#0f0e0d] w-48 mb-1 sm:mb-0">
-                          {key}
+                          {key.charAt(0).toUpperCase() + key.slice(1)}
                         </span>
                         <span className="text-[14px] text-[#6b6459] flex-1">{value}</span>
                       </div>

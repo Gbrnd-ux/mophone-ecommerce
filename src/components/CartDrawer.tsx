@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CartItem } from "../types";
 import { useCurrency } from "../contexts/CurrencyContext";
 
@@ -27,6 +27,18 @@ export function CartDrawer({
       onClose();
     }, 300);
   }, [onClose]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, handleClose]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
@@ -77,12 +89,20 @@ export function CartDrawer({
             <div className="space-y-5">
               {cart.map((item) => (
                 <div key={`${item.product.id}-${item.size}-${item.color}`} className="flex gap-4">
-                  <div className="w-20 h-24 bg-[#e8e3dc] flex-shrink-0 overflow-hidden">
+                  <div 
+                    className="w-20 h-24 bg-[#e8e3dc] flex-shrink-0 overflow-hidden cursor-pointer"
+                    onClick={() => { handleClose(); navigate(`/product/${item.product.id}`); }}
+                  >
                     <img src={item.product.colors?.find(c => c.name === item.color)?.img || item.product.img} alt={item.product.alt} className="w-full h-full object-contain p-2" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-medium tracking-widest uppercase text-[#6b6459]">{item.product.category}</p>
-                    <h4 className="font-display text-[15px] font-light text-[#0f0e0d] truncate">{item.product.name}</h4>
+                    <h4 
+                      className="font-display text-[15px] font-light text-[#0f0e0d] truncate cursor-pointer hover:text-[#c8a97e] transition-colors"
+                      onClick={() => { handleClose(); navigate(`/product/${item.product.id}`); }}
+                    >
+                      {item.product.name}
+                    </h4>
                     <p className="text-[12px] text-[#6b6459] mt-0.5">Size: {item.size}{item.color ? ` · Color: ${item.color}` : ""}</p>
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center border border-[#0f0e0d]/20">

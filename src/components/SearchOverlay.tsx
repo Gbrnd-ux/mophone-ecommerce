@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { PRODUCTS } from "../data/products";
 import { NAV_LINKS } from "../data/categories";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 export function SearchOverlay({
   isOpen,
@@ -13,6 +14,7 @@ export function SearchOverlay({
   onNavigate: (id: number) => void;
   navigate: (path: string) => void;
 }) {
+  const { formatPrice } = useCurrency();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [closing, setClosing] = useState(false);
@@ -22,6 +24,16 @@ export function SearchOverlay({
       setTimeout(() => inputRef.current?.focus(), 100);
     }
     if (isOpen) setQuery("");
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
   const handleClose = useCallback(() => {
@@ -93,7 +105,7 @@ export function SearchOverlay({
                       </div>
                       <p className="text-[11px] font-medium tracking-widest uppercase text-[#6b6459]">{product.category}</p>
                       <p className="font-display text-[14px] font-light text-[#0f0e0d]">{product.name}</p>
-                      <p className="text-[13px] font-medium text-[#0f0e0d]">${product.price}</p>
+                      <p className="text-[13px] font-medium text-[#0f0e0d]">{formatPrice(product.price)}</p>
                     </button>
                   ))}
                 </div>

@@ -62,9 +62,9 @@ export function Footer() {
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] font-medium tracking-widest uppercase text-white/40">
           <p>© 2026 Mophone. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <a href="#/" className="hover:text-white transition-colors">Instagram</a>
-            <a href="#/" className="hover:text-white transition-colors">Pinterest</a>
-            <a href="#/" className="hover:text-white transition-colors">TikTok</a>
+            <a href="https://instagram.com/mophone" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Instagram</a>
+            <a href="https://pinterest.com/mophone" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Pinterest</a>
+            <a href="https://tiktok.com/@mophone" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">TikTok</a>
           </div>
         </div>
       </div>

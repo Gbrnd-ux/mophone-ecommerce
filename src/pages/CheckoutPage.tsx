@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CartItem, ToastData } from "../types";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { useCurrency } from "../contexts/CurrencyContext";
+import { useAuth } from "../contexts/AuthContext";
 
 export function CheckoutPage({
   cart,
@@ -15,6 +16,7 @@ export function CheckoutPage({
   navigate: (path: string) => void;
 }) {
   const { formatPrice } = useCurrency();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [shipping, setShipping] = useState({
     firstName: "",
@@ -36,9 +38,10 @@ export function CheckoutPage({
   const [orderNumber, setOrderNumber] = useState("");
 
   const [promoCode, setPromoCode] = useState("");
-  const [discountAmount, setDiscountAmount] = useState(0);
+  const [isPromoApplied, setIsPromoApplied] = useState(false);
 
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+  const discountAmount = isPromoApplied && promoCode === "MOPHONE" ? Math.round(subtotal * 0.1) : 0;
   const discountedSubtotal = subtotal - discountAmount;
   const shippingCost = discountedSubtotal >= 150 ? 0 : 15;
   const tax = Math.round(discountedSubtotal * 0.08);
@@ -97,6 +100,21 @@ export function CheckoutPage({
     );
   }
 
+  if (!user) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-20 text-center page-enter">
+        <h2 className="font-display text-3xl font-light text-[#0f0e0d] mb-4">Sign in required</h2>
+        <p className="text-[14px] text-[#6b6459] mb-8">Please sign in to your account to securely complete your purchase.</p>
+        <button
+          onClick={() => navigate("/login")}
+          className="inline-flex items-center gap-3 bg-[#0f0e0d] text-[#f5f2ee] text-[12px] font-medium tracking-widest uppercase px-8 py-4 hover:bg-[#c8a97e] transition-colors duration-300"
+        >
+          Go to Sign In
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-6 lg:px-10 py-8 page-enter">
       <Breadcrumb items={[{ label: "Home", path: "/" }, { label: "Cart", path: "/cart" }, { label: "Checkout" }]} />
@@ -150,7 +168,7 @@ export function CheckoutPage({
                 value={shipping.firstName}
                 onChange={(e) => setShipping({ ...shipping, firstName: e.target.value })}
                 className="w-full px-4 py-3 text-[14px] bg-white border border-[#0f0e0d]/20 focus:outline-none focus:border-[#c8a97e] transition-colors"
-                placeholder="Full Name"
+                placeholder="John"
               />
             </div>
             <div>
@@ -174,7 +192,7 @@ export function CheckoutPage({
                 value={shipping.email}
                 onChange={(e) => setShipping({ ...shipping, email: e.target.value })}
                 className="w-full px-4 py-3 text-[14px] bg-white border border-[#0f0e0d]/20 focus:outline-none focus:border-[#c8a97e] transition-colors"
-                placeholder="[EMAIL_ADDRESS]"
+                placeholder="john.doe@example.com"
               />
             </div>
             <div className="md:col-span-2">
@@ -464,25 +482,24 @@ export function CheckoutPage({
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 className="flex-1 px-4 py-3 text-[14px] bg-white border border-[#0f0e0d]/20 focus:outline-none focus:border-[#c8a97e] transition-colors uppercase"
                 placeholder="Enter code (e.g. MOPHONE)"
-                disabled={discountAmount > 0}
+                disabled={isPromoApplied}
               />
               <button
                 onClick={() => {
-                  if (discountAmount > 0) {
-                    setDiscountAmount(0);
+                  if (isPromoApplied) {
+                    setIsPromoApplied(false);
                     setPromoCode("");
                     addToast("Promo code removed", "info");
                   } else if (promoCode === "MOPHONE") {
-                    setDiscountAmount(Math.round(subtotal * 0.1));
+                    setIsPromoApplied(true);
                     addToast("Promo code applied: 10% off", "success");
                   } else {
-                    setDiscountAmount(0);
                     addToast("Invalid promo code", "error");
                   }
                 }}
                 className="bg-[#0f0e0d] text-[#f5f2ee] text-[12px] font-medium tracking-widest uppercase px-6 hover:bg-[#c8a97e] transition-colors duration-300"
               >
-                {discountAmount > 0 ? "Remove" : "Apply"}
+                {isPromoApplied ? "Remove" : "Apply"}
               </button>
             </div>
           </div>

@@ -14,6 +14,8 @@ import { CartPage } from "./pages/CartPage";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { CategoryPage } from "./pages/CategoryPage";
 import { InfoPage } from "./pages/InfoPage";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
 
 // ─── Routing ─────────────────────────────────────────────────────────────────
 function parseHash(hash: string): Route {
@@ -23,6 +25,8 @@ function parseHash(hash: string): Route {
   }
   if (h === "/cart") return { page: "cart" };
   if (h.startsWith("/checkout")) return { page: "checkout" };
+  if (h === "/login") return { page: "login" };
+  if (h === "/register") return { page: "register" };
   if (h.startsWith("/category/")) {
     return { page: "category", param: h.replace("/category/", "") };
   }
@@ -240,6 +244,12 @@ export default function App() {
       )}
       {route.page === "info" && route.param && (
         <InfoPage pageId={route.param} navigate={navigate} />
+      )}
+      {route.page === "login" && (
+        <LoginPage navigate={navigate} />
+      )}
+      {route.page === "register" && (
+        <RegisterPage navigate={navigate} />
       )}
 
       {/* Footer */}

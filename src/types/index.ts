@@ -30,7 +30,7 @@ export type CartItem = {
 };
 
 export type Route = {
-  page: "home" | "product" | "cart" | "checkout" | "category" | "info";
+  page: "home" | "product" | "cart" | "checkout" | "category" | "info" | "login" | "register";
   param?: string;
 };
 

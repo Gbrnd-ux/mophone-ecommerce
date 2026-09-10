@@ -1,5 +1,6 @@
 import { CartItem } from "../types";
 import { Breadcrumb } from "../components/Breadcrumb";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 export function CartPage({
   cart,
@@ -12,6 +13,7 @@ export function CartPage({
   onRemove: (productId: number, size: string, color: string | undefined) => void;
   navigate: (path: string) => void;
 }) {
+  const { formatPrice } = useCurrency();
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   const shipping = subtotal >= 150 ? 0 : 15;
   const total = subtotal + shipping;
@@ -74,7 +76,7 @@ export function CartPage({
                     >
                       {item.product.name}
                     </h3>
-                    <p className="text-[14px] font-medium text-[#0f0e0d] mt-0.5">${item.product.price}</p>
+                    <p className="text-[14px] font-medium text-[#0f0e0d] mt-0.5">{formatPrice(item.product.price)}</p>
                     <p className="text-[12px] text-[#6b6459] md:hidden mt-0.5">Size: {item.size}{item.color ? ` · Color: ${item.color}` : ""}</p>
                   </div>
                 </div>
@@ -110,7 +112,7 @@ export function CartPage({
 
                 {/* Total */}
                 <div className="text-right">
-                  <span className="text-[15px] font-medium text-[#0f0e0d]">${item.product.price * item.quantity}</span>
+                  <span className="text-[15px] font-medium text-[#0f0e0d]">{formatPrice(item.product.price * item.quantity)}</span>
                 </div>
 
                 {/* Remove */}
@@ -134,7 +136,7 @@ export function CartPage({
               <div className="space-y-3 pb-4 border-b border-[#0f0e0d]/10">
                 <div className="flex justify-between text-[13px]">
                   <span className="text-[#6b6459]">Subtotal</span>
-                  <span className="font-medium text-[#0f0e0d]">${subtotal}</span>
+                  <span className="font-medium text-[#0f0e0d]">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-[13px]">
                   <span className="text-[#6b6459]">Shipping</span>
@@ -142,18 +144,18 @@ export function CartPage({
                     {shipping === 0 ? (
                       <span className="text-[#c8a97e]">Free</span>
                     ) : (
-                      `$${shipping}`
+                      formatPrice(shipping)
                     )}
                   </span>
                 </div>
               </div>
               <div className="flex justify-between pt-4 mb-6">
-                <span className="text-[13px] font-medium tracking-widest uppercase text-[#0f0e0d]">Total</span>
-                <span className="font-display text-2xl font-light text-[#0f0e0d]">${total}</span>
+                <span className="font-medium tracking-widest uppercase text-[#0f0e0d] text-[13px]">Total</span>
+                <span className="font-display text-2xl font-light text-[#0f0e0d]">{formatPrice(total)}</span>
               </div>
               {subtotal < 150 && (
                 <p className="text-[12px] text-[#c8a97e] mb-4">
-                  Add ${150 - subtotal} more for free shipping!
+                  Add {formatPrice(150 - subtotal)} more for free shipping!
                 </p>
               )}
               <button

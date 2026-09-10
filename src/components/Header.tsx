@@ -1,5 +1,25 @@
 import { NAV_LINKS } from "../data/categories";
 import { useCurrency } from "../contexts/CurrencyContext";
+import { useAuth } from "../contexts/AuthContext";
+
+function UserIcon({ onClick, isLoggedIn }: { onClick: () => void; isLoggedIn: boolean }) {
+  return (
+    <button onClick={onClick} className="relative cursor-pointer group" aria-label="User Account">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        className={`transition-colors ${isLoggedIn ? 'text-[#c8a97e]' : 'text-[#0f0e0d] group-hover:text-[#c8a97e]'}`}
+      >
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    </button>
+  );
+}
 
 function WishlistIcon({ count, onClick }: { count: number; onClick: () => void }) {
   return (
@@ -69,6 +89,17 @@ export function Header({
   navigate: (path: string) => void;
 }) {
   const { currency, setCurrency } = useCurrency();
+  const { user, signOut } = useAuth();
+
+  const handleUserClick = () => {
+    if (user) {
+      if (confirm('Do you want to sign out?')) {
+        signOut();
+      }
+    } else {
+      navigate('/login');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-[#f5f2ee]/95 backdrop-blur-sm border-b border-[#0f0e0d]/10">
@@ -109,14 +140,15 @@ export function Header({
           </button>
           <button
             onClick={onSearchClick}
-            className="hidden md:flex items-center gap-1.5 text-[12px] text-[#0f0e0d] hover:text-[#c8a97e] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-[12px] text-[#0f0e0d] hover:text-[#c8a97e] transition-colors cursor-pointer"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
-            <span className="tracking-widest uppercase font-medium">Search</span>
+            <span className="tracking-widest uppercase font-medium hidden md:block">Search</span>
           </button>
+          <UserIcon isLoggedIn={!!user} onClick={handleUserClick} />
           <WishlistIcon count={wishlistCount} onClick={onWishlistClick} />
           <CartIcon count={cartItemCount} onClick={onCartClick} />
           <button
